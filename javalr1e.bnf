@@ -1,0 +1,861 @@
+// Java grammar from: http://docs.oracle.com/javase/specs/jls/se7/html/
+// modified in several places attempting to make it LR1. It contains
+// still some conflicts (11 LALR and 36 LR1).
+
+GRAMMAR {<CompilationUnit>}
+
+// 4.1 The Kinds of Types and Values
+
+<Type> ::=
+          <PrimitiveType>
+        | <ReferenceType>
+
+// 4.2 Primitive Types and Values
+
+<PrimitiveType> ::=
+	  <NumericType>
+	| boolean
+
+<NumericType> ::=
+	  <IntegralType>
+	| <FloatingPointType>
+
+<IntegralType> ::=
+	  byte | short | int | long | char
+
+<FloatingPointType> ::=
+	  float | double
+
+//4.3 Reference Types and Values
+
+<ReferenceType> ::=
+	  <ClassOrInterfaceType>
+	| <ArrayType>
+
+<ClassOrInterfaceType> ::=
+	  <Name>
+
+<ClassType> ::=
+	  <ClassOrInterfaceType>
+
+<InterfaceType> ::=
+	  <ClassOrInterfaceType>
+
+<ArrayType> ::=
+           {<PrimitiveType> | <Name>} {"[" "]"}+
+
+//6.5 Determining the Meaning of a Name
+
+<Name> ::=
+      	<SimpleName>
+      |	<QualifiedName>
+
+<SimpleName> ::=
+      	<Identifier>
+
+<QualifiedName> ::=
+      	<Name> "." <Identifier>
+
+
+//7.3 Compilation Units
+
+<CompilationUnit> ::=
+	  [ <PackageDeclaration> ] [ <ImportDeclarations> ]
+          [ <TypeDeclarations> ] [<delimiter>] ["\u001a"]
+
+<ImportDeclarations> ::=
+	  {<ImportDeclaration>}+
+
+<TypeDeclarations> ::=
+	  {<TypeDeclaration>}+
+
+//7.4.1 Named Packages
+
+<PackageDeclaration> ::=
+	  package <Name> ";"
+
+//7.5 Import Declarations
+
+<ImportDeclaration> ::=
+	  <SingleTypeImportDeclaration>
+	| <TypeImportOnDemandDeclaration>
+
+//7.5.1 Single-Type-Import Declaration
+
+<SingleTypeImportDeclaration> ::=
+	  import <Name> ";"
+
+//7.5.2 Type-Import-on-Demand Declaration
+
+<TypeImportOnDemandDeclaration> ::=
+	  import <Name> "." "*" ";"
+
+//7.6 Top Level Type Declarations
+
+<TypeDeclaration> ::=
+	  <ClassDeclaration>
+	| <InterfaceDeclaration>
+	| ";"
+
+//8.1 Class Declaration
+
+<ClassDeclaration> ::=
+	  [ <Modifiers> ] class <Identifier> [ <Super> ]
+          [ <Interfaces> ] <ClassBody>
+
+//8.1.1 Modifiers
+
+<Modifiers> ::=
+	  {<Modifier>}+
+
+<Modifier> ::=
+	  public | protected | private
+        | abstract | static | final | strictfp
+        | native | synchronized | transient | volatile
+
+//8.1.3 Superclasses and Subclasses
+
+<Super> ::=
+	  extends <ClassType>
+
+//8.1.4 Superinterfaces
+
+<Interfaces> ::=
+   	  implements <InterfaceTypeList>
+
+<InterfaceTypeList> ::=
+	  <InterfaceType> {"," <InterfaceType>}*
+
+//8.1.5 Class Body and Member Declarations
+
+<ClassBody> ::=
+	  "{" [ <ClassBodyDeclarations> ] "}"
+
+<ClassBodyDeclarations> ::=
+	  {<ClassBodyDeclaration>}+
+
+<ClassBodyDeclaration> ::=
+	  [ <Modifiers> ] {<FieldDeclaration> | <MethodDeclaration> | <ConstructorDeclaration>}
+	| <ClassDeclaration>
+        | ";"
+	| <StaticInitializer>
+
+//8.3 Field Declarations
+
+<FieldDeclaration> ::=
+	  <Type> <VariableDeclarators> ";"
+
+<VariableDeclarators> ::=
+	  <VariableDeclarator> {"," <VariableDeclarator>}*
+
+<VariableDeclarator> ::=
+	  <VariableDeclaratorId>
+	| <VariableDeclaratorId> "=" <VariableInitializer>
+
+<VariableDeclaratorId> ::=
+	  <Identifier>
+	| <VariableDeclaratorId> "[" "]"
+
+<VariableInitializer> ::=
+	  <Expression>
+	| <ArrayInitializer>
+
+//8.4 Method Declarations
+
+<MethodDeclaration> ::=
+	  <MethodHeader> <MethodBody>
+
+<MethodHeader> ::=
+	   <Type> <MethodDeclarator> [ <Throws> ]
+	|   void <MethodDeclarator> [ <Throws> ]
+
+<MethodDeclarator> ::=
+	  <Identifier> "(" [ <FormalParameterList> ] ")"
+	| <MethodDeclarator> "[" "]"
+
+//8.4.1 Formal Parameters
+
+<FormalParameterList> ::=
+	  <FormalParameter> {"," <FormalParameter>}*
+
+<FormalParameter> ::=
+	  <Type> <VariableDeclaratorId>
+
+//8.4.4 Method Throws
+
+<Throws> ::=
+	  throws <ClassTypeList>
+
+<ClassTypeList> ::=
+	  <ClassType> {"," <ClassType>}*
+
+//8.4.5 Method Body
+
+<MethodBody> ::=
+	  <Block>
+	| ";"
+
+//8.7 Static Initializers
+
+<StaticInitializer> ::=
+	  static <Block>
+
+//8.8 Constructor Declarations
+
+<ConstructorDeclaration> ::=
+	  <ConstructorDeclarator> [ <Throws> ] <ConstructorBody>
+
+<ConstructorDeclarator> ::=
+	  <SimpleName> "(" [ <FormalParameterList> ] ")"
+
+//8.8.5 Constructor Body
+
+<ConstructorBody> ::=
+          "{" [ <ExplicitConstructorInvocation> ] [ <BlockStatements> ] "}"
+
+//8.8.5.1 Explicit Constructor Invocations
+
+<ExplicitConstructorInvocation> ::=
+	  this "(" [ <ArgumentList>] ")" ";"
+	| super "(" [ <ArgumentList>] ")" ";"
+
+//9.1 Interface Declarations
+
+<InterfaceDeclaration> ::=
+	  [ <Modifiers> ] interface <Identifier>
+          [ <ExtendsInterfaces> ] <InterfaceBody>
+
+// 9.1.2 Superinterfaces and Subinterfaces
+
+<ExtendsInterfaces> ::=
+	  extends <InterfaceType>
+        | <ExtendsInterfaces> "," <InterfaceType>
+
+//9.1.3 Interface Body and Member Declarations
+
+<InterfaceBody> ::=
+	  "{" [ <InterfaceMemberDeclarations> ] "}"
+
+<InterfaceMemberDeclarations> ::=
+	  {<InterfaceMemberDeclaration>}+
+
+<InterfaceMemberDeclaration> ::=
+	  [ <Modifiers> ] {<ConstantDeclaration> | <AbstractMethodDeclaration>}
+
+//9.3 Field (Constant) Declarations
+
+<ConstantDeclaration> ::=
+	  <FieldDeclaration>
+
+//9.4 Abstract Method Declarations
+
+<AbstractMethodDeclaration> ::=
+	  <MethodHeader> ";"
+
+//10.6 Arrays Initializers
+
+<ArrayInitializer> ::=
+	  "{" [ <VariableInitializers> ] [ "," ] "}"
+
+<VariableInitializers> ::=
+	  <VariableInitializer> {"," <VariableInitializer>}*
+
+//14.2 Blocks
+
+<Block> ::=
+	  "{" [ <BlockStatements> ] "}"
+
+<BlockStatements> ::=
+	  {<BlockStatement>}+
+
+<BlockStatement> ::=
+	  <LocalVariableDeclarationStatement>
+	| <Statement>
+
+//14.4 Local Variable Declaration Statements
+
+<LocalVariableDeclarationStatement> ::=
+	  <LocalVariableDeclaration> ";"
+
+<LocalVariableDeclaration> ::=
+	  <Type> <VariableDeclarators>
+
+//14.5 Statements
+
+<Statement> ::=
+	  <StatementWithoutTrailingSubstatement>
+	| <LabeledStatement>
+	| <IfThenStatement>
+	| <IfThenElseStatement>
+	| <WhileStatement>
+	| <ForStatement>
+
+<StatementWithoutTrailingSubstatement> ::=
+	  <Block>
+	| <EmptyStatement>
+	| <ExpressionStatement>
+	| <SwitchStatement>
+	| <DoStatement>
+	| <BreakStatement>
+	| <ContinueStatement>
+	| <ReturnStatement>
+	| <SynchronizedStatement>
+	| <ThrowStatement>
+	| <TryStatement>
+
+<StatementNoShortIf> ::=
+	  <StatementWithoutTrailingSubstatement>
+	| <LabeledStatementNoShortIf>
+	| <IfThenElseStatementNoShortIf>
+	| <WhileStatementNoShortIf>
+	| <ForStatementNoShortIf>
+
+//14.6 The Empty Statement
+
+<EmptyStatement> ::=
+  	  ";"
+
+//14.7 Labeled Statements
+
+<LabeledStatement> ::=
+	  <Identifier> ":" <Statement>
+
+<LabeledStatementNoShortIf> ::=
+	  <Identifier> ":" <StatementNoShortIf>
+
+//14.8 Expression Statements
+
+<ExpressionStatement> ::=
+	  <StatementExpression> ";"
+
+<StatementExpression> ::=
+	  <Assignment>
+	| <PreIncrementExpression>
+	| <PreDecrementExpression>
+	| <PostIncrementExpression>
+	| <PostDecrementExpression>
+	| <MethodInvocation>
+	| <ClassInstanceCreationExpression>
+
+//14.9 The <code><b>if</b></code> Statement
+
+<IfThenStatement> ::=
+	  if "(" <Expression> ")" <Statement>
+
+<IfThenElseStatement> ::=
+	  if "(" <Expression> ")" <StatementNoShortIf> else <Statement>
+
+<IfThenElseStatementNoShortIf> ::=
+	  if "(" <Expression> ")" <StatementNoShortIf> else <StatementNoShortIf>
+
+//14.10 The <code><b>switch</code> Statement
+
+<SwitchStatement> ::=
+	  switch "(" <Expression> ")" <SwitchBlock>
+
+<SwitchBlock> ::=
+	  "{" [ <SwitchBlockStatementGroups> ] [ <SwitchLabels> ] "}"
+
+<SwitchBlockStatementGroups> ::=
+	  {<SwitchBlockStatementGroup>}+
+
+<SwitchBlockStatementGroup> ::=
+	  <SwitchLabels> <BlockStatements>
+
+<SwitchLabels> ::=
+	  {<SwitchLabel>}+
+
+<SwitchLabel> ::=
+	  case <ConstantExpression> ":"
+	| default ":"
+
+//14.11 The <code><b>while</code> Statement
+
+<WhileStatement> ::=
+	  while "(" <Expression> ")" <Statement>
+
+<WhileStatementNoShortIf> ::=
+	  while "(" <Expression> ")" <StatementNoShortIf>
+
+//14.12 The <code><b>do</code> Statement
+
+<DoStatement> ::=
+	  do <Statement> while "(" <Expression> ")" ";"
+
+//14.13 The <code><b>for</code> Statement
+
+<ForStatement> ::=
+	  for "(" [ <ForInit> ] ";" [ <Expression> ] ";" [ <ForUpdate> ] ")"
+          <Statement>
+
+<ForStatementNoShortIf> ::=
+	  for "(" [ <ForInit> ] ";" [ <Expression> ] ";" [ <ForUpdate> ] ")"
+          <StatementNoShortIf>
+
+<ForInit> ::=
+	  <StatementExpressionList>
+	| <LocalVariableDeclaration>
+
+<ForUpdate> ::=
+	  <StatementExpressionList>
+
+<StatementExpressionList> ::=
+	  <StatementExpression> {"," <StatementExpression>}*
+
+//14.14 The <code><b>break</code> Statement
+
+<BreakStatement> ::=
+	  break [ <Identifier> ] ";"
+
+//14.15 The <code><b>continue</code> Statement
+
+<ContinueStatement> ::=
+	  continue [ <Identifier> ] ";"
+
+//14.16 The <code><b>return</code> Statement
+
+<ReturnStatement> ::=
+	  return [ <Expression> ] ";"
+
+//14.17 The <code><b>throw</code> Statement
+
+<ThrowStatement> ::=
+	  throw <Expression> ";"
+
+//14.18 The <code><b>synchronized</code> Statement
+
+<SynchronizedStatement> ::=
+	  synchronized "(" <Expression> ")" <Block>
+
+//14.19 The <code><b>try</code> statement
+
+<TryStatement> ::=
+	  try <Block> <Catches>
+	| try <Block> [ <Catches> ] <Finally>
+
+<Catches> ::=
+	  <CatchClause>
+	| <Catches> <CatchClause>
+
+<CatchClause> ::=
+	  catch "(" <FormalParameter> ")" <Block>
+
+<Finally> ::=
+	  finally <Block>
+
+//15.8 Primary Expressions
+
+<Primary> ::=
+	  <PrimaryNoNewArray>
+	| <ArrayCreationExpression>
+
+<PrimaryNoNewArray> ::=
+	  <Literal>
+	| this
+	| "(" <Expression> ")"
+	| <ClassInstanceCreationExpression>
+	| <FieldAccess>
+	| <MethodInvocation>
+	| <ArrayAccess>
+
+//15.9 Class Instance Creation Expressions
+
+<ClassInstanceCreationExpression> ::=
+	  new <ClassType> "(" [ <ArgumentList> ] ")"
+
+<ArgumentList> ::=
+	  <Expression> {"," <Expression>}*
+
+
+//15.10 Array Creation Expressions
+
+<ArrayCreationExpression> ::=
+	  new <PrimitiveType> <DimExprs> [ <Dims> ]
+	|  new <ClassOrInterfaceType> <DimExprs> [ <Dims> ]
+
+<DimExprs> ::=
+	  {<DimExpr>}+
+
+<DimExpr> ::=
+	  "[" <Expression> "]"
+
+<Dims> ::=
+	  {"[" "]"}+
+
+//15.11 Field Access Expressions
+
+<FieldAccess> ::=
+	  <Primary> "." <Identifier>
+	| super "." <Identifier>
+
+//15.12 Method Invocation Expressions
+
+<MethodInvocation> ::=
+	  <Name> "(" [ <ArgumentList> ] ")"
+	| <Primary> "." <Identifier> "(" [ <ArgumentList> ] ")"
+	| super "." <Identifier> "(" [ <ArgumentList> ] ")"
+
+//15.13 Array Access Expressions
+
+<ArrayAccess> ::=
+	  <Name> "[" <Expression> "]"
+	| <PrimaryNoNewArray> "[" <Expression> "]"
+
+//15.14 Postfix Expressions
+
+<PostfixExpression> ::=
+	  <Primary>
+	| <Name>
+	| <PostIncrementExpression>
+	| <PostDecrementExpression>
+
+//15.14.1 Postfix Increment Operator <code>++</code>
+
+<PostIncrementExpression> ::=
+	  <PostfixExpression> "++"
+
+//15.14.2 Postfix Decrement Operator <code>--</code>
+
+<PostDecrementExpression> ::=
+	  <PostfixExpression> "--"
+
+//15.15 Unary Operators
+
+<UnaryExpression> ::=
+	  <PreIncrementExpression>
+	| <PreDecrementExpression>
+	| "+" <UnaryExpression>
+	| "-" <UnaryExpression>
+	| <UnaryExpressionNotPlusMinus>
+
+<PreIncrementExpression> ::=
+	  "++" <UnaryExpression>
+
+<PreDecrementExpression> ::=
+	  "--" <UnaryExpression>
+
+<UnaryExpressionNotPlusMinus> ::=
+	  <PostfixExpression>
+	| "~" <UnaryExpression>
+	| "!" <UnaryExpression>
+	| <CastExpression>
+
+//15.16 Cast Expressions
+
+<CastExpression> ::=
+	  "(" <PrimitiveType> [ <Dims> ] ")" <UnaryExpression>
+	| "(" <Expression> ")" <UnaryExpressionNotPlusMinus>
+	| "(" <Name> <Dims> ")" <UnaryExpressionNotPlusMinus>
+
+//15.17 Multiplicative Operators
+
+<MultiplicativeExpression> ::=
+	  <UnaryExpression>
+	| <MultiplicativeExpression> "*" <UnaryExpression>
+	| <MultiplicativeExpression> "/" <UnaryExpression>
+	| <MultiplicativeExpression> "%" <UnaryExpression>
+
+//15.18 Additive Operators
+
+<AdditiveExpression> ::=
+	  <MultiplicativeExpression>
+	| <AdditiveExpression> "+" <MultiplicativeExpression>
+	| <AdditiveExpression> "-" <MultiplicativeExpression>
+
+//15.19 Shift Operators
+
+<ShiftExpression> ::=
+	  <AdditiveExpression>
+	| <ShiftExpression> "<<" <AdditiveExpression>
+	| <ShiftExpression> ">>" <AdditiveExpression>
+	| <ShiftExpression> ">>>" <AdditiveExpression>
+
+//15.20 Relational Operators
+
+<RelationalExpression> ::=
+	  <ShiftExpression>
+	| <RelationalExpression> "<" <ShiftExpression>
+	| <RelationalExpression> ">" <ShiftExpression>
+	| <RelationalExpression> "<=" <ShiftExpression>
+	| <RelationalExpression> ">=" <ShiftExpression>
+	| <RelationalExpression> instanceof <ReferenceType>
+
+//15.21 Equality Operators
+
+<EqualityExpression> ::=
+	  <RelationalExpression>
+	| <EqualityExpression> "==" <RelationalExpression>
+	| <EqualityExpression> "!=" <RelationalExpression>
+
+//15.22 Bitwise and Logical Operators
+
+<AndExpression> ::=
+	  <EqualityExpression>
+	| <AndExpression> "&" <EqualityExpression>
+
+<ExclusiveOrExpression> ::=
+	  <AndExpression>
+	| <ExclusiveOrExpression> "^" <AndExpression>
+
+<InclusiveOrExpression> ::=
+	  <ExclusiveOrExpression>
+	| <InclusiveOrExpression> "|" <ExclusiveOrExpression>
+
+//15.23 Conditional-And Operator <code>&amp;&amp;
+
+<ConditionalAndExpression> ::=
+	  <InclusiveOrExpression>
+	| <ConditionalAndExpression> "&&" <InclusiveOrExpression>
+
+//15.24 Conditional-Or Operator <code>||</code>
+
+<ConditionalOrExpression> ::=
+	  <ConditionalAndExpression>
+	| <ConditionalOrExpression> "||" <ConditionalAndExpression>
+
+//15.25 Conditional Operator ? :
+
+<ConditionalExpression> ::=
+	  <ConditionalOrExpression>
+	| <ConditionalOrExpression> "?" <Expression> ":" <ConditionalExpression>
+
+//15.26 Assignment Operators
+
+<AssignmentExpression> ::=
+	  <ConditionalExpression>
+	| <Assignment>
+
+<Assignment> ::=
+	  <LeftHandSide> <AssignmentOperator> <AssignmentExpression>
+
+<LeftHandSide> ::=
+	  <Name>
+	| <FieldAccess>
+	| <ArrayAccess>
+
+<AssignmentOperator> ::=
+	  "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>="
+        | ">>>=" | "&=" | "^=" | "|="
+
+//15.27 Expression
+
+<Expression> ::=
+	  <AssignmentExpression>
+
+//15.28 Constant Expression
+
+<ConstantExpression> ::=
+	  <Expression>
+
+// -------------- lexis --------------------
+
+//3.4 Line Terminators
+
+<LineTerminator> ::=
+       "\r" [ "\n" ]
+    |  "\n"
+
+<InputCharacter> ::=
+      ^{ "\r" | "\n"}
+
+//3.6 White Space
+
+<WhiteSpace> ::=
+      " " | "\t" | "\f" | <LineTerminator>
+
+//3.7 Comments
+
+<Comment> ::=
+      <TraditionalComment>
+    | <EndOfLineComment>
+
+<TraditionalComment> ::=
+      "/" "*" <CommentTail>
+
+<EndOfLineComment> ::=
+      "/" "/" [ <CharactersInLine> ] <LineTerminator>
+
+<CommentTail> ::=
+      "*" <CommentTailStar>
+    | <NotStar> <CommentTail>
+
+<CommentTailStar> ::=
+      "/"
+    | "*" <CommentTailStar>
+    | <NotStarNotSlash> <CommentTail>
+
+<NotStar> ::=
+      <InputCharacter> - "*"
+    | <LineTerminator>
+
+<NotStarNotSlash> ::=
+      <InputCharacter> - {"*" | "/"}
+    | <LineTerminator>
+
+<CharactersInLine> ::=
+      <InputCharacter>
+    | <CharactersInLine> <InputCharacter>
+
+//3.8 Identifiers
+
+<Identifier> ::=
+      <IdentifierChars>
+
+<IdentifierChars> ::=
+      <JavaLetter> {<JavaLetterOrDigit>}*
+
+<JavaLetter> ::=
+      a | .. | z | A | .. | Z | _ | $
+
+     // this is simplified: it should be all chars which are Character.isJavaIdendifierStart
+
+<JavaLetterOrDigit> ::=
+      <JavaLetter> | <Digit>
+
+     // this is simplified: it should be all chars which are Character.isJavaIdendifierPart
+
+//3.10 Literals
+
+<Literal> ::=
+      <IntegerLiteral>
+    | <FloatingPointLiteral>
+    | <BooleanLiteral>
+    | <CharacterLiteral>
+    | <StringLiteral>
+    | <NullLiteral>
+
+//3.10.1 Integer Literals
+
+<IntegerLiteral> ::=
+      <DecimalIntegerLiteral>
+    | <HexIntegerLiteral>
+    | <OctalIntegerLiteral>
+
+<DecimalIntegerLiteral> ::=
+      <DecimalNumeral> [ <IntegerTypeSuffix> ]
+
+<HexIntegerLiteral> ::=
+      <HexNumeral> [ <IntegerTypeSuffix> ]
+
+<OctalIntegerLiteral> ::=
+      <OctalNumeral> [ <IntegerTypeSuffix> ]
+
+<IntegerTypeSuffix> ::=
+      l | L
+
+<DecimalNumeral> ::=
+      0
+    | <NonZeroDigit> [ <Digits> ]
+
+<Digits> ::=
+      {<Digit>}+
+
+<Digit> ::=
+      0
+    | <NonZeroDigit>
+
+<NonZeroDigit> ::=
+      1 | .. | 9
+
+<HexNumeral> ::=
+      0 x <HexDigits>
+    | 0 X <HexDigits>
+
+<HexDigits> ::=
+      {<HexDigit>}+
+
+<HexDigit> ::=
+      0 | .. | 9 | a | .. | f | A | .. | F
+
+<OctalNumeral> ::=
+      0 <OctalDigits>
+
+<OctalDigits> ::=
+      {<OctalDigit>}+
+
+<OctalDigit> ::=
+      0 | .. | 7
+
+//3.10.2 Floating-Point Literals
+
+<FloatingPointLiteral> ::= 
+      <Digits> "." [ <Digits> ] [ <ExponentPart> ] [ <FloatTypeSuffix> ]
+    | "." <Digits> [ <ExponentPart> ] [ <FloatTypeSuffix> ]
+    | <Digits> <ExponentPart> [ <FloatTypeSuffix> ]
+    | <Digits> [ <ExponentPart> ] <FloatTypeSuffix>
+
+<ExponentPart> ::=
+      <ExponentIndicator> <SignedInteger>
+
+<ExponentIndicator> ::=
+      e | E
+
+<SignedInteger> ::=
+      [ <Sign> ] <Digits>
+
+<Sign> ::=
+      "+" | "-"
+
+<FloatTypeSuffix> ::=
+      f | F | d | D
+
+//3.10.3 Boolean Literals
+
+<BooleanLiteral> ::=
+      true | false
+
+//3.10.4 Character Literals
+
+<CharacterLiteral> ::=
+      "'" <SingleCharacter> "'"
+    | "'" <EscapeSequence> "'"
+
+<SingleCharacter> ::=
+      <InputCharacter> - { "'" | "\\" }
+
+//3.10.5 String Literals
+
+<StringLiteral> ::=
+      "\"" [ <StringCharacters> ] "\""
+
+<StringCharacters> ::=
+      {<StringCharacter>}+
+
+<StringCharacter> ::=
+      <InputCharacter> - { "\"" | "\\" }
+    | <EscapeSequence>   
+
+//3.10.6 Escape Sequences for Character and String Literals
+
+<EscapeSequence> ::=
+      "\\" b
+    | "\\" t
+    | "\\" n
+    | "\\" f
+    | "\\" r
+    | "\\" "\""
+    | "\\" "'"
+    | "\\" "\\"
+    | <OctalEscape>
+    | "\\u" <HexDigit> <HexDigit> <HexDigit> <HexDigit>
+
+<OctalEscape> ::=
+      "\\" <OctalDigit>
+    | "\\" <OctalDigit> <OctalDigit>
+    | "\\" <ZeroToThree> <OctalDigit> <OctalDigit>
+
+<ZeroToThree> ::=
+      0 | 1 | 2 | 3
+
+//3.10.7 The Null Literal
+
+<NullLiteral> ::=
+      null
+
+  <delimiter> ::= {<WhiteSpace> | <Comment>}+
+
+  LEXIS <token>(lex,point) | <delimiter>(-lex,-point) | TERMINALS(-lex,-point)
+  <token> == <Identifier> | <IntegerLiteral> | <FloatingPointLiteral>
+    | <BooleanLiteral> | <CharacterLiteral> | <StringLiteral> | <NullLiteral>
+END
+

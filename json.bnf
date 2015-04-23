@@ -1,0 +1,70 @@
+GRAMMAR {<Json-text>}
+
+<Json-text> ::= { <object> | <array> } [<delimiter>] ["\u001a"]
+
+<value> ::= false | null | true | <object> | <array> | <number> | <string>
+
+<begin-array> ::=  "["
+
+<begin-object> ::=  "{"
+
+<end-array> ::=     "]"
+
+<end-object> ::=    "}"
+
+<name-separator> ::= ":"
+
+<value-separator> ::= ","
+
+<object> ::= <begin-object> [ <member> {<value-separator> <member>}*] <end-object>
+
+<member> ::= <string> <name-separator> <value>
+
+<array> ::= <begin-array> [ <value> { <value-separator> <value> }* ] <end-array>
+
+<number> ::= [ <minus> ] <int> [ <frac> ] [ <exp> ]
+
+<decimal-point> ::= "."
+
+<digit1-9> ::= 1 | .. | 9
+
+<digit> ::= 0 | .. | 9
+
+<e> ::= e | E
+
+<exp> ::= <e> [ <minus> | <plus> ] {<digit>}+
+
+<frac> ::= <decimal-point> {<digit>}+
+
+<int> ::= <zero> | <digit1-9> {<digit>}*
+
+<minus> ::= "-"
+
+<plus> ::= "+"
+
+<zero> ::= 0
+
+<string> ::= <quotation-mark> {<char>}* <quotation-mark>
+
+<char> ::= <unescaped>
+        | <escape> { "\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "u" <hex><hex><hex><hex> }
+
+<hex> ::=  0 | .. | 9 | a | .. | f | A | .. | F
+
+<escape> ::= "\\"
+
+<quotation-mark> ::= "\""
+
+<unescaped> ::= "\u0020" | .. | "\u0021" | "\u0023" | .. | "\u005B" | "\u005D" | .. | "\uFFFF"
+
+<delimiter> ::=
+        { <whitespace> }+
+
+<whitespace> ::=
+        " " | "\b" | .. | "\r"
+
+LEXIS <token>(lex,point) | <delimiter>(-lex,-point) | TERMINALS(-lex,-point)
+<token> == <number> | <string>
+
+  ALPHABET "\u0000" | .. | "\uffff"
+END
