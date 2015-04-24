@@ -12,8 +12,10 @@ The ebison suite needs Java to run.
 
 To run the tests:
 
-  java -cp ebison.jar -Xmx1g -Xss2m lbj.ParserScope javalr1e.bnf listjlr1.cmd /a=elr1p /e
-  java -cp ebison.jar -Xmx1g -Xss2m lbj.ParserScope json.bnf listjson1.cmd /a=elr1p /e
+  java -cp ebison.jar -Xmx1g -Xss2m lbj.ParserScope javalr1e.bnf
+        listjlr1.cmd /a=elr1p /e
+  java -cp ebison.jar -Xmx1g -Xss2m lbj.ParserScope json.bnf
+        listjson1.cmd /a=elr1p /e
 
   Notes:
 
