@@ -1,3 +1,5 @@
+# Extended bison
+
 This repository contains the ebison parser suite:
 
    - ebison.jar     jar file of the parsers
@@ -22,5 +24,5 @@ Notes:
 
   /a=... selects the parser: elr1p = ELR(1), bison = bison
      
-  /e     directs the test driver to report the net parse time
-         (i.e., with lexing time removed)
+  /e     directs the test driver to report the net parse time,
+         i.e., with lexing time removed
